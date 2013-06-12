@@ -1,0 +1,1 @@
+* resolve issue in JOP/SCJ with current_mission/getNextMission

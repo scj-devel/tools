@@ -1,0 +1,12 @@
+privmem
+=======
+Use eclipse and follow the guide:
+http://wala.sourceforge.net/wiki/index.php/UserGuide:Getting_Started
+to set up wala.
+
+Import privmem from:
+git://github.com/andreasDalsgaard/privmem.git
+
+Unit tests to run test cases can be found in ScjMemoryScopeAnalysisTest.java. It is required that the jar files of the test cases are placed in: ../../papers/mrascj/experiments/ relative to the eclipse working space.
+
+In the data directory the source code of the test cases can be found in the mrascj-testcases tarball. The file privmemScj.jar contain stub classes needed to run the analysis without a SCJ implementation.

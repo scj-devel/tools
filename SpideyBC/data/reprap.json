@@ -1,0 +1,11 @@
+{
+	ReferenceSize: 4,
+	OneUnitSize: 4,
+	PrimordialTypeSizes: [
+		{"java.lang.IllegalArgumentException": 1}
+	],
+	ApplicationTypeSizes: [
+		{"org.reprap.Parameter": 1},
+		{"[C": 40}
+	]
+}
