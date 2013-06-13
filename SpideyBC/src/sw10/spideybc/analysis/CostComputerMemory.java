@@ -6,6 +6,8 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.omg.CORBA.Environment;
+
 import net.sf.javailp.Problem;
 import net.sf.javailp.Result;
 import sw10.spideybc.analysis.ICostResult.ResultType;

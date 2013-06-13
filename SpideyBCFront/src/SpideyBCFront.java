@@ -62,11 +62,12 @@ public class SpideyBCFront {
 		gridData.horizontalSpan = 2;
 		lblApplicationJar.setLayoutData(gridData);
 		
-		txtSourceFilesRootDirectory = new Text(leftContainer, SWT.BORDER);
+		txtApplicationJar = new Text(leftContainer, SWT.BORDER);
+		gridData = new GridData();
 		gridData = new GridData();
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalAlignment = SWT.FILL;
-		txtSourceFilesRootDirectory.setLayoutData(gridData);
+		txtApplicationJar.setLayoutData(gridData);
 		
 		Button jarButton = new Button(leftContainer, SWT.NONE);
 		gridData = new GridData();
@@ -102,12 +103,11 @@ public class SpideyBCFront {
 		lblSourceFilesRoot.setLayoutData(gridData);
 		lblSourceFilesRoot.setText("Source files root directory:");
 		
-		txtApplicationJar = new Text(leftContainer, SWT.BORDER);
-		gridData = new GridData();
+		txtSourceFilesRootDirectory = new Text(leftContainer, SWT.BORDER);
 		gridData = new GridData();
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalAlignment = SWT.FILL;
-		txtApplicationJar.setLayoutData(gridData);
+		txtSourceFilesRootDirectory.setLayoutData(gridData);
 		
 		Button sourceButton = new Button(leftContainer, SWT.NONE);
 		gridData = new GridData();
