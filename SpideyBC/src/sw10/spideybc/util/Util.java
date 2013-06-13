@@ -1,41 +1,26 @@
 package sw10.spideybc.util;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.swing.text.html.HTMLDocument.HTMLReader.SpecialAction;
-
 import sw10.spideybc.program.AnalysisSpecification;
 
 import com.ibm.wala.cfg.ControlFlowGraph;
-import com.ibm.wala.cfg.IBasicBlock;
-import com.ibm.wala.classLoader.IClass;
-import com.ibm.wala.classLoader.Language;
 import com.ibm.wala.examples.properties.WalaExamplesProperties;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
 import com.ibm.wala.ipa.cha.ClassHierarchy;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.properties.WalaProperties;
-import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.ISSABasicBlock;
-import com.ibm.wala.ssa.SSACFG;
-import com.ibm.wala.ssa.SSACFG.ExceptionHandlerBasicBlock;
 import com.ibm.wala.ssa.SSAInstruction;
-import com.ibm.wala.ssa.SSAInvokeInstruction;
-import com.ibm.wala.ssa.SSAReturnInstruction;
-import com.ibm.wala.ssa.SSAThrowInstruction;
-import com.ibm.wala.types.TypeReference;
 import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.collections.Pair;
-import com.ibm.wala.util.debug.Assertions;
-import com.ibm.wala.util.graph.Graph;
 import com.ibm.wala.util.graph.labeled.SlowSparseNumberedLabeledGraph;
 import com.ibm.wala.util.graph.traverse.BFSIterator;
 import com.ibm.wala.viz.DotUtil;
