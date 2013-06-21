@@ -220,7 +220,10 @@ public class ReportGenerator {
 		ctxIndex.put("OutputDir", specification.getOutputDir());
 		ctxIndex.put("SourceFilesRootDir", specification.getSourceFilesRootDir());
 		ctxIndex.put("Analysis", specification.getTypeOfAnalysisPerformed());
-		ctxIndex.put("Methods", specification.getEntryPointSignatures().length);
+		if (specification.getEntryPointSignatures() != null)
+			ctxIndex.put("Methods", specification.getEntryPointSignatures().length);
+		else
+			ctxIndex.put("Methods", 1);
 
 		StringBuilder rows = new StringBuilder();
 		StringBuilder row = null;

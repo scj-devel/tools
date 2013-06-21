@@ -39,6 +39,16 @@ public class JVMModel {
 		}
 	}
 	
+	public void addType(String typeName, int size)
+	{
+		if (typeName.startsWith("L")) {
+			typeName = typeName.substring(1);
+		}
+		
+		typeName = typeName.replace('/', '.');
+		typeSizeByTypeName.put(typeName, size);
+	}
+	
 	public static JVMModel makeFromJson(String file) {
 		String line;
 		StringBuilder json = new StringBuilder();

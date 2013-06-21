@@ -1,16 +1,16 @@
 package sw10.spideybc.analysis;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.omg.CORBA.Environment;
-
 import net.sf.javailp.Problem;
 import net.sf.javailp.Result;
 import sw10.spideybc.analysis.ICostResult.ResultType;
+import sw10.spideybc.build.AnalysisEnvironment;
 import sw10.spideybc.build.JVMModel;
 import sw10.spideybc.errors.ErrorPrinter;
 import sw10.spideybc.errors.ErrorPrinter.AnnotationType;
@@ -23,9 +23,12 @@ import sw10.spideybc.util.annotationextractor.parser.Annotation;
 import com.ibm.wala.cfg.ShrikeCFG;
 import com.ibm.wala.cfg.ShrikeCFG.BasicBlock;
 import com.ibm.wala.classLoader.IBytecodeMethod;
+import com.ibm.wala.classLoader.IClass;
+import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
 import com.ibm.wala.classLoader.ShrikeBTMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
+import com.ibm.wala.ipa.cha.IClassHierarchy;
 import com.ibm.wala.shrikeBT.IInstruction;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.ISSABasicBlock;
@@ -33,6 +36,7 @@ import com.ibm.wala.ssa.SSACFG;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSANewInstruction;
 import com.ibm.wala.types.TypeName;
+import com.ibm.wala.types.TypeReference;
 import com.ibm.wala.util.collections.Iterator2Iterable;
 import com.ibm.wala.util.collections.Pair;
 
@@ -41,11 +45,13 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 	private JVMModel model;
 	private AnalysisResults analysisResults;
 	private AnalysisSpecification analysisSpecification;
+	private AnalysisEnvironment analysisEnvironment;
 	
 	public CostComputerMemory(JVMModel model) {
 		this.model = model;
 		this.analysisResults = AnalysisResults.getAnalysisResults();
 		this.analysisSpecification = AnalysisSpecification.getAnalysisSpecification();
+		this.analysisEnvironment = AnalysisEnvironment.getAnalysisEnvironment();
 	}
 	
 	@Override
@@ -135,13 +141,57 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 		return length;
 	}
 	
+	private IClass getIClass(String str, IClassHierarchy cha)
+	{
+		Iterator<IClass> classes = cha.iterator();
+	     
+		while (classes.hasNext()) {
+			IClass aClass = (IClass) classes.next();
+			if (aClass.getName().toString().equals(str))
+				return aClass;			
+		}
+		
+		throw new NoSuchElementException();	
+	}
+	
+	private long calcCost(IClass aClass)
+	{
+		long sum = 0;
+		
+		if (!aClass.isReferenceType()) {
+			return model.getSizeForQualifiedType(aClass.getName());
+		} else {
+			sum += model.oneUnitSize;
+			
+			for(IField f : aClass.getAllInstanceFields()) {
+				TypeReference tr = f.getFieldTypeReference();
+				
+				if (tr.isReferenceType()) {
+					sum += calcCost(f.getClassHierarchy().lookupClass(tr));
+				} else {
+					sum += model.getSizeForQualifiedType(aClass.getName());
+				}				
+			}
+		}		
+		
+		model.addType(aClass.getReference().getName().toString(), (int) sum);		
+		return sum;
+	}
+	
 	private void setCostForNewObject(CostResultMemory cost, TypeName typeName, String typeNameStr, ISSABasicBlock block) {
+		
+		cost.typeNameByNodeId.put(block.getGraphNodeId(), typeName);
+		cost.resultType = ResultType.TEMPORARY_BLOCK_RESULT;
 		try {
 			cost.allocationCost = model.getSizeForQualifiedType(typeName);
-			cost.typeNameByNodeId.put(block.getGraphNodeId(), typeName);
-			cost.resultType = ResultType.TEMPORARY_BLOCK_RESULT;
 		} catch(NoSuchElementException e) {
-			System.err.println("model.json does not contain type: " + typeNameStr);
+			try {				
+				IClass aClass = this.getIClass(typeNameStr, this.analysisEnvironment.getClassHierarchy());
+				cost.allocationCost = this.calcCost(aClass);				
+			} catch(NoSuchElementException e2)
+			{
+				System.err.println("json model does not contain type: " + typeNameStr);
+			}
 		}
 	}
 
@@ -167,9 +217,13 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 		if(cgNode.getMethod().getDeclaringClass().getClassLoader().getName().toString().equals("Application")) {
 			bytecodeMethod = (IBytecodeMethod)method;
 			javaFileName = bytecodeMethod.getDeclaringClass().getSourceFileName();
+			
+			if (javaFileName == null)
+				System.out.println("Please check that the source path is set correctly.");
+			
 			cfg = cgNode.getIR().getControlFlowGraph();
 			
-			lines = new HashSet<Integer>();
+			lines = new HashSet<Integer>();			
 			sourceFilePath = FileScanner.getFullPath(javaFileName);
 		}
 		
