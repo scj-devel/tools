@@ -65,7 +65,7 @@ public class CGNodeAnalyzer {
 	private ICostResult finalResults;
 	private CGNodeLPProblem lpProblem;
 	private static int internalCfgNr;
-	private static boolean DEBUG = true; 
+	private static boolean DEBUG = false; 
 	
 	public CGNodeAnalyzer(CGNode node, ICostComputer<ICostResult> costComputer) {
 		this.results = AnalysisResults.getAnalysisResults();
