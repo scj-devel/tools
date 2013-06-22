@@ -1,11 +1,13 @@
 package sw10.spideybc.analysis;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import net.sf.javailp.Linear;
@@ -22,23 +24,29 @@ import sw10.spideybc.util.annotationextractor.parser.Annotation;
 import com.ibm.wala.classLoader.CallSiteReference;
 import com.ibm.wala.classLoader.IBytecodeMethod;
 import com.ibm.wala.classLoader.IMethod;
+import com.ibm.wala.examples.properties.WalaExamplesProperties;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.CallString;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.CallStringContext;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.CallStringContextSelector;
+import com.ibm.wala.properties.WalaProperties;
 import com.ibm.wala.shrikeCT.InvalidClassFileException;
 import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.ISSABasicBlock;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAInvokeInstruction;
 import com.ibm.wala.util.WalaException;
+import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.collections.Iterator2Iterable;
 import com.ibm.wala.util.collections.Pair;
 import com.ibm.wala.util.graph.Graph;
+import com.ibm.wala.util.graph.labeled.AbstractNumberedLabeledGraph;
 import com.ibm.wala.util.graph.labeled.SlowSparseNumberedLabeledGraph;
 import com.ibm.wala.util.graph.traverse.BFSIterator;
 import com.ibm.wala.util.intset.IntIterator;
 import com.ibm.wala.util.intset.IntSet;
+import com.ibm.wala.viz.DotUtil;
+import com.ibm.wala.viz.NodeDecorator;
 
 public class CGNodeAnalyzer {
 	private ICostComputer<ICostResult> costComputer;
@@ -56,6 +64,8 @@ public class CGNodeAnalyzer {
 	private Map<Integer, ICostResult> calleeNodeResultsByBlockGraphId;
 	private ICostResult finalResults;
 	private CGNodeLPProblem lpProblem;
+	private static int internalCfgNr;
+	private static boolean DEBUG = true; 
 	
 	public CGNodeAnalyzer(CGNode node, ICostComputer<ICostResult> costComputer) {
 		this.results = AnalysisResults.getAnalysisResults();
@@ -110,7 +120,57 @@ public class CGNodeAnalyzer {
 		return loopAnalyzer.getLoopHeaderBasicBlocksGraphIds();
 	}
 	
-	private void startNodeAnalysis() {
+	/* TODO make a generic generateCFG function - this function was copied from ReportGenerator but is not based on SSAcfg */
+	private void GenerateCFG(AbstractNumberedLabeledGraph<ISSABasicBlock, String> cfg, String guid) throws WalaException{
+		Properties wp = WalaProperties.loadProperties();
+		wp.putAll(WalaExamplesProperties.loadProperties());
+
+        String tempDir = System.getProperty("java.io.tmpdir");
+		String psFile = tempDir + File.separatorChar + guid + ".pdf";	
+		String dotFile = tempDir + File.separatorChar + guid + ".dt";
+		String dotExe = wp.getProperty(WalaExamplesProperties.DOT_EXE);
+
+		final HashMap<ISSABasicBlock, String> labelMap = HashMapFactory.make();		
+		for (Iterator<ISSABasicBlock> iteratorBasicBlock = cfg.iterator(); iteratorBasicBlock.hasNext();) {
+			ISSABasicBlock basicBlock =  iteratorBasicBlock.next();
+
+			StringBuilder label = new StringBuilder();
+			
+
+			if(basicBlock.isEntryBlock()) {
+				label.append(basicBlock.toString());
+				label.append("(entry)");				
+			} else if(basicBlock.isExitBlock()) {
+				label.append(basicBlock.toString());
+				label.append("(exit)");
+			} else {
+				label.append("BB"+basicBlock.getNumber()+"   ");
+				Iterator<SSAInstruction> iteratorInstruction = basicBlock.iterator();
+				while(iteratorInstruction.hasNext()) {
+					SSAInstruction inst = iteratorInstruction.next();
+					label.append(inst.toString() + " ");
+				}
+			}
+			labelMap.put(basicBlock, label.toString());
+		}
+		NodeDecorator labels = new NodeDecorator() {
+			public String getLabel(Object o) {
+				return labelMap.get(o);
+			}
+		};
+		DotUtil.dotify(cfg, labels, dotFile, psFile, dotExe);
+	}
+	
+	private void startNodeAnalysis() {	
+		
+		if (CGNodeAnalyzer.DEBUG == true)
+		{
+			try {
+				this.GenerateCFG(cfg, "internalLPCfg"+CGNodeAnalyzer.internalCfgNr++);
+			} catch (WalaException e1) {				
+				e1.printStackTrace();
+			}
+		}
 		BFSIterator<ISSABasicBlock> iteratorBFSOrdering = new BFSIterator<ISSABasicBlock>(cfg);
 		this.calleeNodeResultsByBlockGraphId = new HashMap<Integer, ICostResult>();
 		Set<ICostResult> calleeNodeResultsAlreadyFound = new HashSet<ICostResult>();
