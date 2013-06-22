@@ -635,19 +635,22 @@ public class ReportGenerator {
 			SSACFG.BasicBlock basicBlock = (SSACFG.BasicBlock) iteratorBasicBlock.next();
 
 			StringBuilder label = new StringBuilder();
-			label.append(basicBlock.toString() + "\n");
+			
 
-			if(basicBlock.isEntryBlock())
-				label.append("(entry)");
-			else if(basicBlock.isExitBlock())
+			if(basicBlock.isEntryBlock()) {
+				label.append(basicBlock.toString());
+				label.append("(entry)");				
+			} else if(basicBlock.isExitBlock()) {
+				label.append(basicBlock.toString());
 				label.append("(exit)");
-
-			Iterator<SSAInstruction> iteratorInstruction = basicBlock.iterator();
-			while(iteratorInstruction.hasNext()) {
-				SSAInstruction inst = iteratorInstruction.next();
-				label.append(inst.toString() + "\n");
+			} else {
+				label.append("BB"+basicBlock.getNumber()+"   ");
+				Iterator<SSAInstruction> iteratorInstruction = basicBlock.iterator();
+				while(iteratorInstruction.hasNext()) {
+					SSAInstruction inst = iteratorInstruction.next();
+					label.append(inst.toString() + " ");
+				}
 			}
-
 			labelMap.put(basicBlock, label.toString());
 		}
 		NodeDecorator labels = new NodeDecorator() {
