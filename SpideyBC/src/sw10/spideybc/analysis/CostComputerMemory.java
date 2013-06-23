@@ -17,6 +17,7 @@ import sw10.spideybc.errors.ErrorPrinter.AnnotationType;
 import sw10.spideybc.errors.ErrorPrinter.ModelType;
 import sw10.spideybc.program.AnalysisSpecification;
 import sw10.spideybc.util.FileScanner;
+import sw10.spideybc.util.Util;
 import sw10.spideybc.util.annotationextractor.extractor.AnnotationExtractor;
 import sw10.spideybc.util.annotationextractor.parser.Annotation;
 
@@ -141,35 +142,24 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 		return length;
 	}
 	
-	private IClass getIClass(String str, IClassHierarchy cha)
-	{
-		Iterator<IClass> classes = cha.iterator();
-	     
-		while (classes.hasNext()) {
-			IClass aClass = (IClass) classes.next();
-			if (aClass.getName().toString().equals(str))
-				return aClass;			
-		}
-		
-		throw new NoSuchElementException();	
-	}
-	
 	private long calcCost(IClass aClass)
 	{
 		long sum = 0;
 		
 		if (!aClass.isReferenceType()) {
 			return model.getSizeForQualifiedType(aClass.getName());
+		} else if(aClass.isArrayClass()) {
+			sum += model.referenceSize;
 		} else {
-			sum += model.oneUnitSize;
+			sum += model.referenceSize;
 			
 			for(IField f : aClass.getAllInstanceFields()) {
 				TypeReference tr = f.getFieldTypeReference();
 				
 				if (tr.isReferenceType()) {
-					sum += calcCost(f.getClassHierarchy().lookupClass(tr));
+					sum += model.referenceSize; 
 				} else {
-					sum += model.getSizeForQualifiedType(aClass.getName());
+					sum += model.getSizeForQualifiedType(tr.getName());
 				}				
 			}
 		}		
@@ -186,7 +176,7 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 			cost.allocationCost = model.getSizeForQualifiedType(typeName);
 		} catch(NoSuchElementException e) {
 			try {				
-				IClass aClass = this.getIClass(typeNameStr, this.analysisEnvironment.getClassHierarchy());
+				IClass aClass = Util.getIClass(typeNameStr, this.analysisEnvironment.getClassHierarchy());
 				cost.allocationCost = this.calcCost(aClass);				
 			} catch(NoSuchElementException e2)
 			{

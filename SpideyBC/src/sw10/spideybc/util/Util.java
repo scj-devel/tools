@@ -4,11 +4,13 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import sw10.spideybc.program.AnalysisSpecification;
 
 import com.ibm.wala.cfg.ControlFlowGraph;
+import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.examples.properties.WalaExamplesProperties;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.CallGraph;
@@ -157,4 +159,16 @@ public class Util {
 		DotUtil.dotify(cfg, labels, dotFile, psFile, dotExe); 
 	}
 
+	public static IClass getIClass(String str, IClassHierarchy cha)
+	{
+		Iterator<IClass> classes = cha.iterator();
+	     
+		while (classes.hasNext()) {
+			IClass aClass = (IClass) classes.next();
+			if (aClass.getName().toString().equals(str))
+				return aClass;			
+		}
+		
+		throw new NoSuchElementException();	
+	}
 }
