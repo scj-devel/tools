@@ -20,10 +20,11 @@ import sw10.spideybc.errors.ErrorPrinter.AnnotationType;
 import sw10.spideybc.util.Util;
 import sw10.spideybc.util.annotationextractor.extractor.AnnotationExtractor;
 import sw10.spideybc.util.annotationextractor.parser.Annotation;
-
 import com.ibm.wala.classLoader.CallSiteReference;
 import com.ibm.wala.classLoader.IBytecodeMethod;
+import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IMethod;
+import com.ibm.wala.classLoader.NewSiteReference;
 import com.ibm.wala.examples.properties.WalaExamplesProperties;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.callgraph.propagation.cfa.CallString;
@@ -35,6 +36,8 @@ import com.ibm.wala.ssa.IR;
 import com.ibm.wala.ssa.ISSABasicBlock;
 import com.ibm.wala.ssa.SSAInstruction;
 import com.ibm.wala.ssa.SSAInvokeInstruction;
+import com.ibm.wala.ssa.SSANewInstruction;
+import com.ibm.wala.types.TypeReference;
 import com.ibm.wala.util.WalaException;
 import com.ibm.wala.util.collections.HashMapFactory;
 import com.ibm.wala.util.collections.Iterator2Iterable;
@@ -65,7 +68,8 @@ public class CGNodeAnalyzer {
 	private ICostResult finalResults;
 	private CGNodeLPProblem lpProblem;
 	private static int internalCfgNr;
-	private static boolean DEBUG = false; 
+	private static boolean DEBUG = true; 
+	IClass exception = null;
 	
 	public CGNodeAnalyzer(CGNode node, ICostComputer<ICostResult> costComputer) {
 		this.results = AnalysisResults.getAnalysisResults();
@@ -162,15 +166,16 @@ public class CGNodeAnalyzer {
 	}
 	
 	private void startNodeAnalysis() {	
+		boolean exceptionOptimize = false;
 		
-		if (CGNodeAnalyzer.DEBUG == true)
-		{
+		if (CGNodeAnalyzer.DEBUG == true) {
 			try {
 				this.GenerateCFG(cfg, "internalLPCfg"+CGNodeAnalyzer.internalCfgNr++);
 			} catch (WalaException e1) {				
 				e1.printStackTrace();
 			}
 		}
+		
 		BFSIterator<ISSABasicBlock> iteratorBFSOrdering = new BFSIterator<ISSABasicBlock>(cfg);
 		this.calleeNodeResultsByBlockGraphId = new HashMap<Integer, ICostResult>();
 		Set<ICostResult> calleeNodeResultsAlreadyFound = new HashSet<ICostResult>();
@@ -184,8 +189,8 @@ public class CGNodeAnalyzer {
 			Iterator<? extends String> IteratorOutgoingLabels = (Iterator<? extends String>)cfg.getSuccLabels(currentBlock);
 			Iterator<? extends String> IteratorIncomingLabels = (Iterator<? extends String>)cfg.getPredLabels(currentBlock);
 			List<String> outgoing = new ArrayList<String>();
-			List<String> incoming = new ArrayList<String>();
-
+			List<String> incoming = new ArrayList<String>();			
+			
 			while (IteratorOutgoingLabels.hasNext()) {
 				String edgeLabel = IteratorOutgoingLabels.next();
 				outgoing.add(edgeLabel);
@@ -252,7 +257,7 @@ public class CGNodeAnalyzer {
 						alloc.add(0, incomingLabel);
 					}
 				}
-
+				
 				for (String outgoingLabel : outgoing) {
 					flow.add(-1, outgoingLabel);
 				}
@@ -280,24 +285,38 @@ public class CGNodeAnalyzer {
 							}
 							
 						}
+												
 					} catch (InvalidClassFileException e) {
 					}    	
 
 					for(int i : loopBlocks) {
-						if (loopHeaderSuccessors.contains(i)) {
+						ISSABasicBlock bb = cfg.getNode(i);
+						/* Exception optimization */
+			 			CGNode target = containsOneInvokeAndNoAlloc(bb);
+						if (target != null) {
+							if (allocateOnlyOneException(target) == true) {
+								exceptionOptimize = true;					
+							}				
+						}
+						if (loopHeaderSuccessors.contains(i)) {							
 							loop.add(-1, cfg.getEdgeLabels(currentBlock, cfg.getNode(i)).iterator().next());
 							break;
 						}
 					}
-					
+				
+					/* Exception optimization */
+					if (exceptionOptimize == true) {					
+						boundForLoop = "1";						
+					}					
+
 					IntIterator ancestorGraphIds = loopHeaderAncestors.intIterator();
 					while (ancestorGraphIds.hasNext()) {
 						int ancestorID = ancestorGraphIds.next();
 						if (!loopBlocks.contains(ancestorID)) {
 							loop.add(Integer.parseInt(boundForLoop), cfg.getEdgeLabels(cfg.getNode(ancestorID), currentBlock).iterator().next());
 						}
-					}
-					
+					}					
+				
 					lpProblem.addConstraint(loop, Operator.EQ, 0);
 				}
 				
@@ -308,6 +327,68 @@ public class CGNodeAnalyzer {
 		}
 	}
 	
+	/* Used for exception optimization. 
+	 * Returns true if no other allocation is performed in the node 
+	 * given as argument than one allocation of an exception.           */
+	private boolean allocateOnlyOneException(CGNode target) {
+		IClass icType = null;
+		int exceptionAllocations = 0;
+		
+		if (this.exception == null)
+			 this.exception = Util.getIClass("Ljava/lang/Exception", method.getClassHierarchy());		
+			
+		for(NewSiteReference newsite : Iterator2Iterable.make(target.getIR().iterateNewSites()))
+		{
+			SSANewInstruction newinst = target.getIR().getNew(newsite);
+			TypeReference type = newinst.getConcreteType();
+			if (!type.isArrayType()) {
+				String typename = type.getName().toString();
+				icType = Util.getIClass(typename, method.getClassHierarchy());
+				if( !method.getClassHierarchy().isSubclassOf(icType, this.exception) ) {
+					return false;
+				} else {
+					exceptionAllocations++;
+				}
+			} else {
+				return false;
+			}
+		}
+		
+		if (exceptionAllocations == 1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/* Used for exception optimization. 
+	 * If basic block only contains one invoke that has one 
+	 * possible target return that CGNode otherwise return null*/
+	private CGNode containsOneInvokeAndNoAlloc(ISSABasicBlock block) {
+		CGNode target = null;
+		int invokeCount = 0;
+		boolean alloc = false;
+		for(SSAInstruction instruction : Iterator2Iterable.make(block.iterator())) { 
+			if(instruction instanceof SSAInvokeInstruction) {
+				invokeCount++;
+				SSAInvokeInstruction inst = (SSAInvokeInstruction)instruction;				
+				CallSiteReference callSiteRef = inst.getCallSite();
+				Set<CGNode> possibleTargets = environment.getCallGraph().getPossibleTargets(node, callSiteRef);
+				if (possibleTargets.size() == 1) {
+					target = (CGNode) possibleTargets.toArray()[0];
+				}				
+			} else if(instruction instanceof SSANewInstruction) {
+				alloc = true;
+			}
+		}
+		
+		if (invokeCount < 2 && alloc == false) {
+			return target;
+		} else {
+			return null;
+		}
+	}
+
 	private void addConstraintForEntryBlock(ISSABasicBlock entryBlock) {
 		Linear linear = new Linear();
 		linear.add(1, "f0");
