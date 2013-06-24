@@ -534,11 +534,12 @@ public class ReportGenerator {
 						TypeName typeName = countByTypename.getKey();
 						code.append("<td>" + typeName + "</td>");
 						int count = countByTypename.getValue();
+						if (count != 1) {count++;};
 						code.append("<td>" + count + "</td>");
 
 						int typeSize;
 
-						if(memCost.aggregatedArraySizeByTypeName.containsKey(typeName)) {
+						if(memCost.aggregatedArraySizeByTypeName.containsKey(typeName)) {							
 							typeSize = memCost.aggregatedArraySizeByTypeName.get(typeName) * jvmModel.getSizeForQualifiedType(typeName);
 						} else {
 							typeSize = count * jvmModel.getSizeForQualifiedType(typeName);
@@ -663,12 +664,12 @@ public class ReportGenerator {
 
 	private void createOutputDirectories() {
 		File outputDir = new File(OUTPUT_DIR);		
-		if(!outputDir.exists()) {
-			outputDir.mkdir();
-		} else {
+		if(outputDir.exists()) {
 			deleteFilesInDirectory(outputDir);
 		}
-
+		
+		outputDir.mkdir();
+		
 		try {
 			new File(RESOURCES_DIR).mkdir();
 
