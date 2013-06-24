@@ -150,9 +150,7 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 			return model.getSizeForQualifiedType(aClass.getName());
 		} else if(aClass.isArrayClass()) {
 			sum += model.referenceSize;
-		} else {
-			sum += model.referenceSize;
-			
+		} else {			
 			for(IField f : aClass.getAllInstanceFields()) {
 				TypeReference tr = f.getFieldTypeReference();
 				
@@ -161,8 +159,12 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 				} else {
 					sum += model.getSizeForQualifiedType(tr.getName());
 				}				
-			}
+			}			
 		}		
+		
+		if (sum == 0) {
+			sum += model.referenceSize;
+		}
 		
 		model.addType(aClass.getReference().getName().toString(), (int) sum);		
 		return sum;
@@ -276,7 +278,7 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 							count += lpResults.getPrimalValue(var).intValue();
 							results.countByTypename.put(typeName, count);
 							int countAggregated = results.aggregatedCountByTypename.get(typeName);
-							countAggregated += lpResults.getPrimalValue(var).intValue();
+							countAggregated += lpResults.getPrimalValue(var).intValue();							
 							results.aggregatedCountByTypename.put(typeName, countAggregated);
 						}
 						else {
@@ -296,7 +298,7 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 								results.aggregatedCountByTypename.put(typeAllocatedInCallee.getKey(), count);
 							}
 							else
-							{
+							{								
 								results.aggregatedCountByTypename.put(typeAllocatedInCallee.getKey(), lpResults.getPrimalValue(var).intValue()*typeAllocatedInCallee.getValue());
 							}							
 						}
