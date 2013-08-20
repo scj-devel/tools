@@ -32,7 +32,7 @@ public class FileScanner {
 	 * Args: 	exampleFile.java
 	 * Returns: examplePackage/exampleFile.java 
 	 */
-	public static String getRelativePath(String fileName) {
+	public static String getRelativePath(String fileName) {		
 		fileName = fileName.substring(0, fileName.indexOf('.'));
 		String fullPath = "";
 		for(String path : mapping.keySet()) {
@@ -50,7 +50,7 @@ public class FileScanner {
 	 * Returns: /Users/../exampleFile.java 
 	 */
 	public static String getFullPath(String fileName) {
-		String path = AnalysisSpecification.getAnalysisSpecification().getSourceFilesRootDir();
+		String path = AnalysisSpecification.getAnalysisSpecification().getSourceFilesRootDir();		
 		return path + File.separatorChar + getRelativePath(fileName);
 	}
 }

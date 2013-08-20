@@ -15,9 +15,9 @@ import net.sf.javailp.Operator;
 import net.sf.javailp.Result;
 import sw10.spideybc.analysis.loopanalysis.CFGLoopAnalyzer;
 import sw10.spideybc.build.AnalysisEnvironment;
-import sw10.spideybc.errors.ErrorPrinter;
-import sw10.spideybc.errors.ErrorPrinter.AnnotationType;
+import sw10.spideybc.util.OutputPrinter;
 import sw10.spideybc.util.Util;
+import sw10.spideybc.util.OutputPrinter.AnnotationType;
 import sw10.spideybc.util.annotationextractor.extractor.AnnotationExtractor;
 import sw10.spideybc.util.annotationextractor.parser.Annotation;
 import com.ibm.wala.classLoader.CallSiteReference;
@@ -68,7 +68,7 @@ public class CGNodeAnalyzer {
 	private ICostResult finalResults;
 	private CGNodeLPProblem lpProblem;
 	private static int internalCfgNr;
-	private static boolean DEBUG = true; 
+	private static boolean DEBUG = false; 
 	IClass exception = null;
 	
 	public CGNodeAnalyzer(CGNode node, ICostComputer<ICostResult> costComputer) {
@@ -273,7 +273,7 @@ public class CGNodeAnalyzer {
 						IBytecodeMethod bytecodeMethod = (IBytecodeMethod)this.node.getMethod();
 						lineNumberForLoop = bytecodeMethod.getLineNumber(bytecodeMethod.getBytecodeIndex(currentBlock.getFirstInstructionIndex()));
 						if (annotationByLineNumber == null || (!annotationByLineNumber.containsKey(lineNumberForLoop) && !annotationByLineNumber.containsKey(lineNumberForLoop - 1))) {
-							ErrorPrinter.printAnnotationError(AnnotationType.AnnotationLoop, method, lineNumberForLoop);
+							OutputPrinter.printAnnotationError(AnnotationType.AnnotationLoop, method, lineNumberForLoop);
 							boundForLoop = "0";
 						} else {
 							if (annotationByLineNumber.containsKey(lineNumberForLoop)) {

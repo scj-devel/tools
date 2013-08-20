@@ -12,12 +12,12 @@ import net.sf.javailp.Result;
 import sw10.spideybc.analysis.ICostResult.ResultType;
 import sw10.spideybc.build.AnalysisEnvironment;
 import sw10.spideybc.build.JVMModel;
-import sw10.spideybc.errors.ErrorPrinter;
-import sw10.spideybc.errors.ErrorPrinter.AnnotationType;
-import sw10.spideybc.errors.ErrorPrinter.ModelType;
 import sw10.spideybc.program.AnalysisSpecification;
+import sw10.spideybc.util.OutputPrinter;
 import sw10.spideybc.util.FileScanner;
 import sw10.spideybc.util.Util;
+import sw10.spideybc.util.OutputPrinter.AnnotationType;
+import sw10.spideybc.util.OutputPrinter.ModelType;
 import sw10.spideybc.util.annotationextractor.extractor.AnnotationExtractor;
 import sw10.spideybc.util.annotationextractor.parser.Annotation;
 
@@ -27,6 +27,7 @@ import com.ibm.wala.classLoader.IBytecodeMethod;
 import com.ibm.wala.classLoader.IClass;
 import com.ibm.wala.classLoader.IField;
 import com.ibm.wala.classLoader.IMethod;
+import com.ibm.wala.classLoader.NewSiteReference;
 import com.ibm.wala.classLoader.ShrikeBTMethod;
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.ipa.cha.IClassHierarchy;
@@ -91,7 +92,7 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 			arrayLength = tryGetArrayLength(block);
 
 			if(arrayLength == null) {
-				ErrorPrinter.printAnnotationError(AnnotationType.AnnotationArray, method, lineNumber);
+				OutputPrinter.printAnnotationError(AnnotationType.AnnotationArray, method, lineNumber);
 				arrayLength = 0;
 			}
 		}
@@ -104,7 +105,7 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 			cost.resultType = ResultType.TEMPORARY_BLOCK_RESULT;
 		}
 		catch(NoSuchElementException e) {
-			ErrorPrinter.printModelError(ModelType.ModelEntry, method, lineNumber, typeName);
+			OutputPrinter.printModelError(ModelType.ModelEntry, method, lineNumber, typeName);
 		}
 	}
 	
@@ -170,9 +171,8 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 		return sum;
 	}
 	
-	private void setCostForNewObject(CostResultMemory cost, TypeName typeName, String typeNameStr, ISSABasicBlock block) {
-		
-		cost.typeNameByNodeId.put(block.getGraphNodeId(), typeName);
+	private void setCostForNewObject(CostResultMemory cost, TypeName typeName, String typeNameStr, ISSABasicBlock block) {		
+		cost.typeNameByNodeId.put(block.getGraphNodeId(), typeName);		
 		cost.resultType = ResultType.TEMPORARY_BLOCK_RESULT;
 		try {
 			cost.allocationCost = model.getSizeForQualifiedType(typeName);
@@ -189,6 +189,7 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 
 	@Override
 	public CostResultMemory getFinalResultsFromContextResultsAndLPSolutions(CostResultMemory resultsContext, Result lpResults, Problem problem, Map<String, Pair<Integer, Integer>> edgeLabelToNodesIDs, Map<Integer, ICostResult> calleeResultsAtGraphNodeIdByResult, CGNode cgNode) {
+		
 		CostResultMemory results = new CostResultMemory();
 		if (resultsContext != null) {
 			results.typeNameByNodeId.putAll(resultsContext.typeNameByNodeId);
@@ -334,7 +335,7 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 	public boolean isInstructionInteresting(SSAInstruction instruction) {
 		return (instruction instanceof SSANewInstruction ? true : false);
 	}
-
+	
 	@Override
 	public void addCost(CostResultMemory fromResult, CostResultMemory toResult) {
 		toResult.allocationCost += fromResult.getCostScalar();

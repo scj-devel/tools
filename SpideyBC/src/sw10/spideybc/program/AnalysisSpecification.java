@@ -28,6 +28,13 @@ public class AnalysisSpecification {
 	
 	private LinkedList<CGNode> entryPointCGNodes;
 	
+	public AnalysisSpecification(AnalysisType aType, boolean generateAnalysisReport, CGNode entryPoint) {
+		this.analysisType = aType;
+		this.generateAnalysisReports = generateAnalysisReport;
+		this.entryPointCGNodes = new LinkedList<CGNode>();
+		this.entryPointCGNodes.add(entryPoint);
+	}
+	
 	private AnalysisSpecification() {
 		this.analysisType = AnalysisType.ALL;
 		this.generateAnalysisReports = true;

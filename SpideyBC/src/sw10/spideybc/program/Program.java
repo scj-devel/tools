@@ -12,9 +12,9 @@ import sw10.spideybc.analysis.ICostComputer;
 import sw10.spideybc.analysis.ICostResult;
 import sw10.spideybc.build.AnalysisEnvironmentBuilder;
 import sw10.spideybc.build.JVMModel;
-import sw10.spideybc.errors.ErrorPrinter;
 import sw10.spideybc.program.AnalysisSpecification.AnalysisType;
 import sw10.spideybc.util.Config;
+import sw10.spideybc.util.OutputPrinter;
 import sw10.spideybc.util.RunConfiguration;
 
 import com.ibm.wala.util.CancelException;
@@ -124,7 +124,7 @@ public class Program {
 					specification.setRunConfiguration(config);
 				}
 				else{
-					ErrorPrinter.printError(runConfiguration + " is invalid for " + Config.COMMANDLINE_RUNCONFIGURATION);
+					OutputPrinter.printError(runConfiguration + " is invalid for " + Config.COMMANDLINE_RUNCONFIGURATION);
 					System.exit(1);
 				}
 			} else {
@@ -146,8 +146,8 @@ public class Program {
 	
 	public static void printCommandLineUsage(StringBuilder nulls) {
 		
-		ErrorPrinter.printError("The following arguments were null: \n" + nulls);
-		ErrorPrinter.printError("Usage: \n" +
+		OutputPrinter.printError("The following arguments were null: \n" + nulls);
+		OutputPrinter.printError("Usage: \n" +
 				"Required\n" +
 				"\t-jvm_model <file>.json : the corresponding JVM model for analysis, see documentation for format\n" +
 				"\t-application <file>.jar : jar file containing the application to be analysed\n" +

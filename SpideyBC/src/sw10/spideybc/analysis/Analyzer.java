@@ -7,7 +7,9 @@ import java.util.Map.Entry;
 
 import sw10.spideybc.build.JVMModel;
 import sw10.spideybc.program.AnalysisSpecification;
+import sw10.spideybc.program.AnalysisSpecification.AnalysisType;
 import sw10.spideybc.reports.ReportGenerator;
+import sw10.spideybc.util.OutputPrinter;
 
 import com.ibm.wala.ipa.callgraph.CGNode;
 import com.ibm.wala.types.TypeName;
@@ -24,6 +26,15 @@ public class Analyzer {
 		this.stackAnalyzer = new StackAnalyzer();
 	}
 
+	public Analyzer(AnalysisSpecification spec) {
+		this.specification = spec;
+		
+		if ( specification.getTypeOfAnalysisPerformed() != AnalysisType.ALLOCATIONS) {
+			this.stackAnalyzer = new StackAnalyzer();
+		}
+	}
+
+	
 	public static Analyzer makeAnalyzer() {
 		return new Analyzer();
 	}
@@ -34,18 +45,22 @@ public class Analyzer {
 		LinkedList<CGNode> entryCGNodes = specification.getEntryPointCGNodes();	
 
 		for(CGNode entryNode : entryCGNodes) {;
-			System.out.println("Starting entry node " + entryNode.getMethod().toString());
+			OutputPrinter.printInfo("Starting entry node " + entryNode.getMethod().toString());
 			ICostResult results = new CGNodeAnalyzer(entryNode, costComputer).analyzeNode();
 			CostResultMemory memRes = (CostResultMemory)results;				
-			System.out.println("Worst case allocation for " + entryNode.getMethod().toString() + ":\t" + results.getCostScalar());
+			OutputPrinter.printInfo("Worst case allocation for " + entryNode.getMethod().toString() + ":\t" + results.getCostScalar());
 			for(Entry<TypeName, Integer> i : memRes.aggregatedCountByTypename.entrySet()) {
-				System.out.println("\t TYPE_NAME\t" + i.getKey().toString() + "\tCOUNT " + i.getValue());
+				OutputPrinter.printInfo("\t TYPE_NAME\t" + i.getKey().toString() + "\tCOUNT " + i.getValue());
 			}
 		}
+
+		if ( specification.getTypeOfAnalysisPerformed() != AnalysisType.ALLOCATIONS) {
+			stackAnalyzer.analyze();
+		}
 		
-		stackAnalyzer.analyze();
-		
-		ReportGenerator gen = new ReportGenerator();
-		gen.Generate(AnalysisResults.getAnalysisResults().getReportEntries());
+		if ( specification.getShouldGenerateAnalysisReports() == true) {
+			ReportGenerator gen = new ReportGenerator();
+			gen.Generate(AnalysisResults.getAnalysisResults().getReportEntries());
+		}
 	}
 }

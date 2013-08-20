@@ -31,8 +31,8 @@ import sw10.spideybc.analysis.AnalysisResults;
 import sw10.spideybc.analysis.CostResultMemory;
 import sw10.spideybc.analysis.ICostResult;
 import sw10.spideybc.build.JVMModel;
-import sw10.spideybc.errors.ErrorPrinter;
 import sw10.spideybc.program.AnalysisSpecification;
+import sw10.spideybc.util.OutputPrinter;
 import sw10.spideybc.util.RunConfiguration;
 
 import com.ibm.wala.classLoader.IMethod;
@@ -154,7 +154,7 @@ public class ReportGenerator {
 			GenerateDetails(indexTemplate, ctxIndex, reportEntries);
 			
 		} catch (IOException e) {
-			ErrorPrinter.printError("Could not generate reports. " + e.getStackTrace());
+			OutputPrinter.printError("Could not generate reports. " + e.getStackTrace());
 		}
 	}
 
@@ -303,14 +303,14 @@ public class ReportGenerator {
 				writeTemplateToFile(codeTemplate, ctxCode, path);  
 
 			} catch (FileNotFoundException e) {
-				ErrorPrinter.printError("Could not find file. " + e.getStackTrace());
+				OutputPrinter.printError("Could not find file. " + e.getStackTrace());
 			} catch(IOException e) {
-				ErrorPrinter.printError("Could not write to file. " + e.getStackTrace());
+				OutputPrinter.printError("Could not write to file. " + e.getStackTrace());
 			} finally {
 				try {
 					fileJavaReader.close();
 				} catch (IOException e) {
-					ErrorPrinter.printError("Could not close filereader. " + e.getStackTrace());
+					OutputPrinter.printError("Could not close filereader. " + e.getStackTrace());
 				}
 			}
 
@@ -357,12 +357,12 @@ public class ReportGenerator {
 			fw = new FileWriter(jsonFile);
 			fw.write(content.toString());
 		} catch(IOException e) {
-			ErrorPrinter.printError("Could not write file, " + fullPath + ". " + e.getStackTrace());
+			OutputPrinter.printError("Could not write file, " + fullPath + ". " + e.getStackTrace());
 		} finally {
 			try {
 				fw.close();
 			} catch (IOException e) {
-				ErrorPrinter.printError("Could not close filewriter. " + e.getStackTrace());
+				OutputPrinter.printError("Could not close filewriter. " + e.getStackTrace());
 			}
 		}
 	}
@@ -683,7 +683,7 @@ public class ReportGenerator {
 			new File(HTML_DIR).mkdir();
 			new File(JS_DIR).mkdir();		
 		} catch (SecurityException e) {
-			ErrorPrinter.printError("Could not create output directories. " + e.getStackTrace());
+			OutputPrinter.printError("Could not create output directories. " + e.getStackTrace());
 		}	
 	}
 
