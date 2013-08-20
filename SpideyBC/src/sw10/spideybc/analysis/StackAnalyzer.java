@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import sw10.spideybc.build.AnalysisEnvironment;
+import sw10.spideybc.build.JVMModel;
 import sw10.spideybc.program.AnalysisSpecification;
 
 import com.ibm.wala.ipa.callgraph.CGNode;
@@ -15,11 +16,13 @@ import com.ibm.wala.ipa.callgraph.propagation.cfa.CallStringContextSelector;
 public class StackAnalyzer {
 	private CallGraph cg;
 	
+	private JVMModel model;
 	private AnalysisEnvironment environment;
 	private AnalysisResults analysisResults;
 	
 	
-	public StackAnalyzer() {
+	public StackAnalyzer(JVMModel model) {
+		this.model = model;
 		this.environment = AnalysisEnvironment.getAnalysisEnvironment();
 		this.cg = environment.getCallGraph();
 		this.analysisResults = AnalysisResults.getAnalysisResults();
@@ -49,7 +52,7 @@ public class StackAnalyzer {
 					continue;
 				}
 				memCost = (CostResultMemory)analysisResults.getResultsForNode(node);
-				cost = dist(successor) + memCost.getStackCost();
+				cost = dist(successor) + memCost.getStackCost();  
 				if(cost > max) {
 					maxSuccessor = successor;
 					max = cost;
@@ -61,7 +64,7 @@ public class StackAnalyzer {
 			return max;
 		} else {
 			memCost = (CostResultMemory)analysisResults.getResultsForNode(node);
-			memCost.setAccumStackCost(memCost.getStackCost());
+			memCost.setAccumStackCost(memCost.getStackCost()+1); //+1 for the return address
 			return memCost.getStackCost();
 		}
 	}

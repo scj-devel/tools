@@ -23,14 +23,14 @@ public class Analyzer {
 	
 	private Analyzer() {
 		this.specification = AnalysisSpecification.getAnalysisSpecification();
-		this.stackAnalyzer = new StackAnalyzer();
+		this.stackAnalyzer = new StackAnalyzer(specification.getJvmModel());
 	}
 
 	public Analyzer(AnalysisSpecification spec) {
 		this.specification = spec;
 		
 		if ( specification.getTypeOfAnalysisPerformed() != AnalysisType.ALLOCATIONS) {
-			this.stackAnalyzer = new StackAnalyzer();
+			this.stackAnalyzer = new StackAnalyzer(specification.getJvmModel());
 		}
 	}
 

@@ -222,11 +222,11 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 		}
 		
 		/* Save node stack information */
-		if(method instanceof ShrikeBTMethod) {
+		if(method instanceof ShrikeBTMethod) {		
 			ShrikeBTMethod shrikeMethod = (ShrikeBTMethod)method;	
 			results.setStackUnitSize(model.oneUnitSize);
 			results.setMaxLocals(shrikeMethod.getMaxLocals());
-			results.setMaxStackHeight(shrikeMethod.getMaxStackHeight());	
+			results.setMaxStackHeight(shrikeMethod.getMaxStackHeight()-2);	//Substract two since Shrike adds two and assumes this makes the number of entries not word - we actually want the number of words and what Shrike does is wrong!
 		}
 		
 		Collection<Object> allVariables = problem.getVariables();
