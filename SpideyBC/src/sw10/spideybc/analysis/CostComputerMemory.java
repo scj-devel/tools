@@ -161,6 +161,7 @@ public class CostComputerMemory implements ICostComputer<CostResultMemory> {
 					sum += model.getSizeForQualifiedType(tr.getName());
 				}				
 			}			
+			sum += model.jvmObjectOverheadSize;
 		}		
 		
 		if (sum == 0) {

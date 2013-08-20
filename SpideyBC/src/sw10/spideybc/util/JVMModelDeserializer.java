@@ -18,13 +18,15 @@ public class JVMModelDeserializer implements JsonDeserializer<JVMModel> {
 		
 		final String REFERENCE_SIZE_KEY = "ReferenceSize";
 		final String ONE_UNIT_SIZE_KEY = "OneUnitSize";
+		final String JVM_OBJECT_OVERHEAD_SIZE_KEY = "JvmObjectOverheadSize";
 		final String PRIMORDIAL_TYPES_ARRAY_KEY = "PrimordialTypeSizes";
 		final String APPLICATION_TYPES_ARRAY_KEY = "ApplicationTypeSizes";
 		
 		JVMModel model = new JVMModel();
 		
-		model.referenceSize = json.getAsJsonObject().get(REFERENCE_SIZE_KEY).getAsInt();
+		model.referenceSize = json.getAsJsonObject().get(REFERENCE_SIZE_KEY).getAsInt();		
 		model.oneUnitSize = json.getAsJsonObject().get(ONE_UNIT_SIZE_KEY).getAsInt();
+		model.jvmObjectOverheadSize = json.getAsJsonObject().get(JVM_OBJECT_OVERHEAD_SIZE_KEY).getAsInt();
 		
 		JsonArray primordialTypes = json.getAsJsonObject().getAsJsonArray(PRIMORDIAL_TYPES_ARRAY_KEY);
 		for(JsonElement typeSizeEntry : primordialTypes) {

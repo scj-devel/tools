@@ -19,6 +19,7 @@ public class JVMModel {
 	public int referenceSize;
 	public int oneUnitSize;
 	public Map<String, Integer> typeSizeByTypeName;
+	public int jvmObjectOverheadSize;
 	
 	public JVMModel() {
 		this.typeSizeByTypeName = new HashMap<String, Integer>();
